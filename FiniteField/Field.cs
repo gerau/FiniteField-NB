@@ -1,4 +1,4 @@
-﻿namespace FiniteFieldNormal
+﻿namespace FiniteField
 {
     public class Field
     {
@@ -109,7 +109,7 @@
                 var temp = MultByMatrix(tempLeft[i]);
                 var count = MultByVector(temp, tempRight[i]);
 
-                result[i / 64] |= (ulong)count << (i % 64);
+                result[i / 64] |= (ulong)count << i % 64;
             }
             return new Element(result, left.field);
         }
@@ -142,7 +142,7 @@
             {
                 result.array[i] = ulong.MaxValue;
             }
-            result.array[^1] = ulong.MaxValue & (ulong.MaxValue >> (64 - dimension % 64));
+            result.array[^1] = ulong.MaxValue & ulong.MaxValue >> 64 - dimension % 64;
             return result;
         }
         public Element Zero()

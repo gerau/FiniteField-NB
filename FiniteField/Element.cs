@@ -1,4 +1,4 @@
-﻿namespace FiniteFieldNormal
+﻿namespace FiniteField
 {
     public class Element
     {
@@ -17,7 +17,7 @@
         public Element(Element element)
         {
             Array.Copy(element.array, array, array.Length);
-            this.field = element.field;
+            field = element.field;
         }
         public Element(ulong[] array, Field field)
         {
@@ -25,7 +25,7 @@
             this.field = field;
         }
 
-        public static Element operator + (Element left, Element right)
+        public static Element operator +(Element left, Element right)
         {
             Element result = new Element(left.field);
             for (int i = 0; i < left.array.Length; i++)
@@ -34,8 +34,30 @@
             }
             return result;
         }
-        
-        public Element Power(Element element)
+        public static Element operator * (Element left, Element right)
+        {
+            return left.field.Mult(left,right);
+        }
+        public static bool operator == (Element left, Element right)
+        {
+            for(int i = 0; i < left.array.Length - 1; i++)
+            {
+                if (left.array[i] != right.array[i])
+                {
+                    return false;
+                }
+            }
+            if ((left.array[^1]&(Field.dimension%64)) != (right.array[^1] & (Field.dimension % 64)))
+            {
+                return false;
+            }
+            return true;
+        }
+        public static bool operator != (Element left, Element right)
+        {
+            return !(left == right);
+        }
+        public Element Pow(Element element)
         {
             var result = field.One();
             for (int i = 0; i < Field.dimension - 1; i++)
@@ -71,13 +93,13 @@
         public Element CycleShiftToRight(int shift)
         {
             Element result = new Element(field);
-            for(int i = 0; i < shift; i++)
+            for (int i = 0; i < shift; i++)
             {
                 result = result.CycleShiftToRight();
             }
             return result;
         }
-        
+
         public Element CycleShiftToLeft()
         {
             Element result = new Element(field);
@@ -85,30 +107,30 @@
             {
                 result.array[i] = array[i] >> 1 | array[i + 1] << 63;
             }
-            int l = (Field.dimension % 64);
+            int l = Field.dimension % 64;
             var temp = array[0] & 1;
 
             result.array[^1] = (array[^1] >> 1) + (temp << l - 1);
             return result;
         }
 
-        public Element Inversed()
+        public Element InverseElement()
         {
             var binary = Convert.ToString(Field.dimension - 1, 2);
             var result = new Element(this);
-            var k = 1;           
-            for(int i = 1; i < binary.Length; i++)
+            var k = 1;
+            for (int i = 1; i < binary.Length; i++)
             {
                 var temp = new Element(result);
-                for(int j = 0; j < k; j++)
+                for (int j = 0; j < k; j++)
                 {
                     result = result.CycleShiftToRight();
                 }
                 k = 2 * k;
                 result = field.Mult(result, temp);
-                if(binary.ElementAt(i) == '1')
+                if (binary.ElementAt(i) == '1')
                 {
-                    result = field.Mult(result.CycleShiftToRight(),this);
+                    result = field.Mult(result.CycleShiftToRight(), this);
                     k++;
                 }
             }
@@ -119,7 +141,7 @@
         {
             int k = BitCount();
             k &= 1;
-            if(k == 1)
+            if (k == 1)
             {
                 return field.One();
             }
@@ -127,6 +149,10 @@
             {
                 return field.Zero();
             }
+        }
+        public Element ToSquare()
+        {
+            return CycleShiftToRight();
         }
         public int BitCount()
         {
@@ -155,7 +181,7 @@
             }
             int count = position / 64;
             int shift = position % 64;
-            return (int)((array[count] >> shift) & 1);
+            return (int)(array[count] >> shift & 1);
         }
         public override string ToString()
         {
